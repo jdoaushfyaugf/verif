@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather App</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,12 +13,38 @@
             background: linear-gradient(to right, #4facfe, #00f2fe);
             color: white;
         }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            background: #ffcc00;
+            color: black;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.1);
+        }
         #weather {
             margin-top: 20px;
             padding: 20px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .weather-icon {
             width: 100px;
@@ -28,35 +55,42 @@
     <h1>Live Weather Info</h1>
     <p>Click the button to allow location access and see your weather.</p>
     <button onclick="getWeather()">Get Weather</button>
-    <div id="weather"></div>
+    <div id="weather">🔄 Waiting for input...</div>
 
     <script>
         function getWeather() {
             if (navigator.geolocation) {
+                document.getElementById("weather").innerHTML = "⏳ Fetching weather...";
+                
                 navigator.geolocation.getCurrentPosition(async position => {
                     let lat = position.coords.latitude;
                     let lon = position.coords.longitude;
-                    let apiKey = "9ba686fc2ff05b462218e72586fef478";  // Replace with your OpenWeatherMap API key
+                    let apiKey = "9ba686fc2ff05b462218e72586fef478";  // Your OpenWeatherMap API key
                     let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
 
                     try {
                         let response = await fetch(url);
                         let data = await response.json();
-                        displayWeather(data);
+                        if (data.cod !== 200) {
+                            document.getElementById("weather").innerHTML = "❌ Error: " + data.message;
+                        } else {
+                            displayWeather(data);
+                        }
                     } catch (error) {
-                        document.getElementById("weather").innerHTML = "Failed to fetch weather data.";
+                        document.getElementById("weather").innerHTML = "❌ Failed to fetch weather data.";
                     }
                 }, error => {
-                    document.getElementById("weather").innerHTML = "Location permission denied.";
+                    document.getElementById("weather").innerHTML = "❌ Location permission denied.";
                 });
             } else {
-                document.getElementById("weather").innerHTML = "Geolocation is not supported by this browser.";
+                document.getElementById("weather").innerHTML = "❌ Geolocation is not supported by this browser.";
             }
         }
 
         function displayWeather(data) {
             let weatherDiv = document.getElementById("weather");
             let iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+            
             weatherDiv.innerHTML = `
                 <h2>${data.name}, ${data.sys.country}</h2>
                 <img src="${iconUrl}" class="weather-icon">
@@ -64,6 +98,11 @@
                 <p>🌡 Temperature: ${data.main.temp}°C</p>
                 <p>💨 Wind Speed: ${data.wind.speed} m/s</p>
             `;
+            
+            // Re-apply animation each time new data loads
+            weatherDiv.style.animation = "none"; 
+            void weatherDiv.offsetWidth;  // Trick to restart animation
+            weatherDiv.style.animation = "fadeIn 0.8s forwards";
         }
     </script>
 </body>
