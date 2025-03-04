@@ -3,43 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Bot Verification</title>
+    <title>Data Broker Opt-Out</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: black;
-            color: white;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #7289da;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #5b6eae;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        #results { margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h1>Discord Bot Verification</h1>
-    <p>Click the button below to authorize the bot to your account. This will allow you to use the bot's features.</p>
-    <a href="https://discord.com/oauth2/authorize?client_id=1343972041606434876&response_type=code&redirect_uri=https%3A%2F%2Fmorxaverify.netlify.app%2F&scope=identify+rpc">
-        <button class="button">Verify with Discord</button>
-    </a>
+    <h2>Check and Remove Your Email from Data Brokers</h2>
+    <p>Enter your email to find opt-out links:</p>
+    
+    <input type="email" id="email" placeholder="Enter your email" required>
+    <button onclick="checkBrokers()">Check & Opt-Out</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function checkBrokers() {
+            let email = document.getElementById("email").value;
+            if (!email) {
+                alert("Please enter a valid email.");
+                return;
+            }
+
+            let brokers = [
+                { name: "Spokeo", url: "https://www.spokeo.com/opt_out/new" },
+                { name: "BeenVerified", url: "https://www.beenverified.com/app/optout/search" },
+                { name: "Whitepages", url: "https://www.whitepages.com/suppression-request" },
+                { name: "MyLife", url: "https://www.mylife.com/ccpa" }
+            ];
+
+            let resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "<h3>Opt-Out Links:</h3>";
+
+            brokers.forEach(broker => {
+                resultsDiv.innerHTML += `<p><strong>${broker.name}:</strong> <a href="${broker.url}" target="_blank">${broker.url}</a></p>`;
+            });
+        }
+    </script>
 </body>
 </html>
