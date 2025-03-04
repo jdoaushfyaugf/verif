@@ -3,43 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Broker Opt-Out</title>
+    <title>Weather App</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        input, button { margin: 10px; padding: 10px; font-size: 16px; }
-        #results { margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+        }
+        #weather {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .weather-icon {
+            width: 100px;
+        }
     </style>
 </head>
 <body>
-    <h2>Check and Remove Your Email from Data Brokers</h2>
-    <p>Enter your email to find opt-out links:</p>
-    
-    <input type="email" id="email" placeholder="Enter your email" required>
-    <button onclick="checkBrokers()">Check & Opt-Out</button>
-    
-    <div id="results"></div>
+    <h1>Live Weather Info</h1>
+    <p>Click the button to allow location access and see your weather.</p>
+    <button onclick="getWeather()">Get Weather</button>
+    <div id="weather"></div>
 
     <script>
-        function checkBrokers() {
-            let email = document.getElementById("email").value;
-            if (!email) {
-                alert("Please enter a valid email.");
-                return;
+        function getWeather() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async position => {
+                    let lat = position.coords.latitude;
+                    let lon = position.coords.longitude;
+                    let apiKey = "9ba686fc2ff05b462218e72586fef478";  // Replace with your OpenWeatherMap API key
+                    let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+
+                    try {
+                        let response = await fetch(url);
+                        let data = await response.json();
+                        displayWeather(data);
+                    } catch (error) {
+                        document.getElementById("weather").innerHTML = "Failed to fetch weather data.";
+                    }
+                }, error => {
+                    document.getElementById("weather").innerHTML = "Location permission denied.";
+                });
+            } else {
+                document.getElementById("weather").innerHTML = "Geolocation is not supported by this browser.";
             }
+        }
 
-            let brokers = [
-                { name: "Spokeo", url: "https://www.spokeo.com/opt_out/new" },
-                { name: "BeenVerified", url: "https://www.beenverified.com/app/optout/search" },
-                { name: "Whitepages", url: "https://www.whitepages.com/suppression-request" },
-                { name: "MyLife", url: "https://www.mylife.com/ccpa" }
-            ];
-
-            let resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = "<h3>Opt-Out Links:</h3>";
-
-            brokers.forEach(broker => {
-                resultsDiv.innerHTML += `<p><strong>${broker.name}:</strong> <a href="${broker.url}" target="_blank">${broker.url}</a></p>`;
-            });
+        function displayWeather(data) {
+            let weatherDiv = document.getElementById("weather");
+            let iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+            weatherDiv.innerHTML = `
+                <h2>${data.name}, ${data.sys.country}</h2>
+                <img src="${iconUrl}" class="weather-icon">
+                <p><strong>${data.weather[0].description.toUpperCase()}</strong></p>
+                <p>🌡 Temperature: ${data.main.temp}°C</p>
+                <p>💨 Wind Speed: ${data.wind.speed} m/s</p>
+            `;
         }
     </script>
 </body>
