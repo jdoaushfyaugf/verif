@@ -3,107 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <title>Advanced Igloo Animation</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(to right, #4facfe, #00f2fe);
-            color: white;
+        /* General Styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            border: none;
-            background: #ffcc00;
-            color: black;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: transform 0.2s;
+
+        .sky {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB 50%, #FFFFFF 100%);
         }
-        button:hover {
-            transform: scale(1.1);
+
+        .mountain {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to top, #FFFFFF 50%, #F0F0F0 100%);
+            clip-path: polygon(0% 100%, 100% 100%, 50% 0%);
         }
-        #weather {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            display: inline-block;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 0.8s forwards;
+
+        .igloo {
+            position: absolute;
+            bottom: 300px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 150px;
         }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .igloo-dome {
+            width: 100%;
+            height: 100%;
+            background: #F0F0F0;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
         }
-        .weather-icon {
+
+        .igloo-door {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 80px;
+            background: #A0522D;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .smoke {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: smoke-float 3s infinite ease-in-out;
+        }
+
+        .snowball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            animation: snowball-roll 5s infinite linear;
+        }
+
+        .snowball-1 {
+            top: 50px;
+            left: -50px;
+        }
+
+        .snowball-2 {
+            top: 80px;
+            right: -50px;
+        }
+
+        /* Clouds */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: cloud-float 10s infinite linear;
+        }
+
+        .cloud-1 {
+            top: 20%;
+            left: 10%;
             width: 100px;
+            height: 50px;
+        }
+
+        .cloud-2 {
+            top: 10%;
+            right: 20%;
+            width: 150px;
+            height: 75px;
+        }
+
+        /* Animations */
+        @keyframes smoke-float {
+            0% { transform: translateY(0) scale(1); opacity: 0.8; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 0.5; }
+            100% { transform: translateY(0) scale(1); opacity: 0.8; }
+        }
+
+        @keyframes snowball-roll {
+            0% { transform: translateX(0) rotate(0deg); }
+            100% { transform: translateX(200px) rotate(360deg); }
+        }
+
+        @keyframes cloud-float {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
     </style>
 </head>
 <body>
-    <h1>Live Weather Info</h1>
-    <p>Click the button to allow location access and see your weather.</p>
-    <button onclick="getWeather()">Get Weather</button>
-    <div id="weather">🔄 Waiting for input...</div>
-
+    <div class="sky">
+        <div class="mountain"></div>
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="igloo">
+            <div class="igloo-dome"></div>
+            <div class="igloo-door"></div>
+            <div class="smoke"></div>
+            <div class="snowball snowball-1"></div>
+            <div class="snowball snowball-2"></div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
     <script>
-        function getWeather() {
-            if (navigator.geolocation) {
-                document.getElementById("weather").innerHTML = "⏳ Fetching weather...";
-                
-                navigator.geolocation.getCurrentPosition(async position => {
-                    let lat = position.coords.latitude;
-                    let lon = position.coords.longitude;
-                    let apiKey = "9ba686fc2ff05b462218e72586fef478";  // Your OpenWeatherMap API key
-                    let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+        // GSAP Animations
+        gsap.from(".igloo-dome", {
+            duration: 2,
+            scale: 0.5,
+            opacity: 0,
+            ease: "power2.out",
+            delay: 1,
+        });
 
-                    try {
-                        let response = await fetch(url);
-                        let data = await response.json();
-                        if (data.cod !== 200) {
-                            document.getElementById("weather").innerHTML = "❌ Error: " + data.message;
-                        } else {
-                            displayWeather(data);
-                        }
-                    } catch (error) {
-                        document.getElementById("weather").innerHTML = "❌ Failed to fetch weather data.";
-                    }
-                }, error => {
-                    document.getElementById("weather").innerHTML = "❌ Location permission denied.";
-                });
-            } else {
-                document.getElementById("weather").innerHTML = "❌ Geolocation is not supported by this browser.";
-            }
-        }
+        gsap.from(".igloo-door", {
+            duration: 1.5,
+            y: 100,
+            opacity: 0,
+            ease: "bounce.out",
+            delay: 2,
+        });
 
-        function displayWeather(data) {
-            let weatherDiv = document.getElementById("weather");
-            let iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
-            
-            weatherDiv.innerHTML = `
-                <h2>${data.name}, ${data.sys.country}</h2>
-                <img src="${iconUrl}" class="weather-icon">
-                <p><strong>${data.weather[0].description.toUpperCase()}</strong></p>
-                <p>🌡 Temperature: ${data.main.temp}°C</p>
-                <p>💨 Wind Speed: ${data.wind.speed} m/s</p>
-            `;
-            
-            // Re-apply animation each time new data loads
-            weatherDiv.style.animation = "none"; 
-            void weatherDiv.offsetWidth;  // Trick to restart animation
-            weatherDiv.style.animation = "fadeIn 0.8s forwards";
-        }
+        gsap.from(".smoke", {
+            duration: 3,
+            y: -50,
+            opacity: 0,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+        });
+
+        gsap.from(".snowball-1", {
+            duration: 5,
+            x: -200,
+            rotate: -360,
+            repeat: -1,
+            ease: "linear",
+        });
+
+        gsap.from(".snowball-2", {
+            duration: 5,
+            x: 200,
+            rotate: 360,
+            repeat: -1,
+            ease: "linear",
+        });
     </script>
 </body>
 </html>
