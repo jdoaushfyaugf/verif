@@ -3,220 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realistic Igloo Animation</title>
+    <title>Hyper-Realistic Igloo Animation</title>
     <style>
-        /* General Styles */
         body, html {
             margin: 0;
             padding: 0;
             overflow: hidden;
             height: 100%;
-            background: linear-gradient(to bottom, #87CEEB 50%, #FFFFFF 100%);
         }
-
-        /* Sky and Sun */
-        .sky {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .sun {
-            position: absolute;
-            top: 10%;
-            left: 10%;
-            width: 80px;
-            height: 80px;
-            background: #FFD700;
-            border-radius: 50%;
-            box-shadow: 0 0 50px #FFD700;
-        }
-
-        /* Mountains */
-        .mountain {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 300px;
-            background: linear-gradient(to top, #FFFFFF 50%, #F0F0F0 100%);
-            clip-path: polygon(0% 100%, 100% 100%, 50% 0%);
-        }
-
-        /* Igloo */
-        .igloo {
-            position: absolute;
-            bottom: 250px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 150px;
-            animation: float 6s infinite ease-in-out;
-        }
-
-        .igloo-dome {
-            width: 100%;
-            height: 100%;
-            background: #F0F0F0;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .igloo-door {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 80px;
-            background: #A0522D;
-            border-radius: 10px 10px 0 0;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .smoke {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            background: #FFFFFF;
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: smoke-float 3s infinite ease-in-out;
-        }
-
-        /* Snowballs */
-        .snowball {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #FFFFFF;
-            border-radius: 50%;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-            animation: snowball-roll 5s infinite linear;
-        }
-
-        .snowball-1 {
-            top: 50px;
-            left: -50px;
-        }
-
-        .snowball-2 {
-            top: 80px;
-            right: -50px;
-        }
-
-        /* Falling Snow */
-        .snow {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            overflow: hidden;
-        }
-
-        .snowflake {
-            position: absolute;
-            top: -10%;
-            width: 5px;
-            height: 5px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: snow-fall linear infinite;
-        }
-
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translate(-50%, -10px); }
-            50% { transform: translate(-50%, 10px); }
-        }
-
-        @keyframes smoke-float {
-            0% { transform: translateY(0) scale(1); opacity: 0.8; }
-            50% { transform: translateY(-20px) scale(1.2); opacity: 0.5; }
-            100% { transform: translateY(0) scale(1); opacity: 0.8; }
-        }
-
-        @keyframes snowball-roll {
-            0% { transform: translateX(0) rotate(0deg); }
-            100% { transform: translateX(200px) rotate(360deg); }
-        }
-
-        @keyframes snow-fall {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(100vh); }
+        canvas {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div class="sky">
-        <!-- Sun -->
-        <div class="sun"></div>
-
-        <!-- Falling Snow -->
-        <div class="snow">
-            <!-- Generate 50 snowflakes -->
-            <script>
-                for (let i = 0; i < 50; i++) {
-                    const snowflake = document.createElement("div");
-                    snowflake.className = "snowflake";
-                    snowflake.style.left = `${Math.random() * 100}%`;
-                    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                    snowflake.style.animationDelay = `${Math.random() * 5}s`;
-                    document.querySelector(".snow").appendChild(snowflake);
-                }
-            </script>
-        </div>
-
-        <!-- Mountain -->
-        <div class="mountain"></div>
-
-        <!-- Igloo -->
-        <div class="igloo">
-            <div class="igloo-dome"></div>
-            <div class="igloo-door"></div>
-            <div class="smoke"></div>
-            <div class="snowball snowball-1"></div>
-            <div class="snowball snowball-2"></div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r146/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
     <script>
-        // GSAP Animations for Igloo Movement
-        gsap.to(".igloo", {
-            duration: 10,
-            x: "+=200",
-            y: "+=50",
-            repeat: -1,
-            yoyo: true,
-            ease: "power1.inOut",
+        // Scene Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(10, 10, 10);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 50;
+        scene.add(directionalLight);
+
+        // Skybox
+        const skyTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/skybox/arid2.jpg');
+        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide });
+        const skybox = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(skybox);
+
+        // Ground (Snow)
+        const groundTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/snow.jpg');
+        groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+        groundTexture.repeat.set(10, 10);
+        const groundMaterial = new THREE.MeshStandardMaterial({ map: groundTexture });
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Igloo (3D Model)
+        const loader = new THREE.GLTFLoader();
+        loader.load('https://threejs.org/examples/models/gltf/Igloo/scene.gltf', (gltf) => {
+            const igloo = gltf.scene;
+            igloo.scale.set(0.5, 0.5, 0.5);
+            igloo.position.y = 1;
+            igloo.castShadow = true;
+            igloo.receiveShadow = true;
+            scene.add(igloo);
+
+            // Animation
+            const animateIgloo = () => {
+                igloo.rotation.y += 0.01;
+                requestAnimationFrame(animateIgloo);
+            };
+            animateIgloo();
         });
 
-        // GSAP Animations for Snowballs
-        gsap.to(".snowball-1", {
-            duration: 5,
-            x: "+=300",
-            y: "+=100",
-            rotate: 360,
-            repeat: -1,
-            yoyo: true,
-            ease: "power1.inOut",
-        });
+        // Snowfall
+        const snowflakes = [];
+        const snowGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const snowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        for (let i = 0; i < 1000; i++) {
+            const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
+            snowflake.position.set(
+                Math.random() * 100 - 50,
+                Math.random() * 50 + 50,
+                Math.random() * 100 - 50
+            );
+            snowflake.castShadow = true;
+            snowflakes.push(snowflake);
+            scene.add(snowflake);
+        }
 
-        gsap.to(".snowball-2", {
-            duration: 5,
-            x: "-=300",
-            y: "+=100",
-            rotate: -360,
-            repeat: -1,
-            yoyo: true,
-            ease: "power1.inOut",
+        // Camera Position
+        camera.position.set(0, 10, 20);
+        camera.lookAt(0, 0, 0);
+
+        // Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Render Loop
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            // Snowfall Animation
+            snowflakes.forEach((snowflake) => {
+                snowflake.position.y -= 0.1;
+                if (snowflake.position.y < -10) {
+                    snowflake.position.y = 50;
+                }
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        };
+        animate();
+
+        // Resize Handling
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
 </body>
