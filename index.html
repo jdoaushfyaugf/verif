@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Igloo Animation</title>
+    <title>Realistic Igloo Animation</title>
     <style>
         /* General Styles */
         body, html {
@@ -11,15 +11,29 @@
             padding: 0;
             overflow: hidden;
             height: 100%;
+            background: linear-gradient(to bottom, #87CEEB 50%, #FFFFFF 100%);
         }
 
+        /* Sky and Sun */
         .sky {
             position: relative;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, #87CEEB 50%, #FFFFFF 100%);
+            overflow: hidden;
         }
 
+        .sun {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 50px #FFD700;
+        }
+
+        /* Mountains */
         .mountain {
             position: absolute;
             bottom: 0;
@@ -29,13 +43,15 @@
             clip-path: polygon(0% 100%, 100% 100%, 50% 0%);
         }
 
+        /* Igloo */
         .igloo {
             position: absolute;
-            bottom: 300px;
+            bottom: 250px;
             left: 50%;
             transform: translateX(-50%);
             width: 200px;
             height: 150px;
+            animation: float 6s infinite ease-in-out;
         }
 
         .igloo-dome {
@@ -45,6 +61,7 @@
             border-radius: 50%;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .igloo-door {
@@ -56,6 +73,7 @@
             height: 80px;
             background: #A0522D;
             border-radius: 10px 10px 0 0;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
         .smoke {
@@ -70,12 +88,14 @@
             animation: smoke-float 3s infinite ease-in-out;
         }
 
+        /* Snowballs */
         .snowball {
             position: absolute;
             width: 20px;
             height: 20px;
             background: #FFFFFF;
             border-radius: 50%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
             animation: snowball-roll 5s infinite linear;
         }
 
@@ -89,30 +109,33 @@
             right: -50px;
         }
 
-        /* Clouds */
-        .cloud {
+        /* Falling Snow */
+        .snow {
             position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10%;
+            width: 5px;
+            height: 5px;
             background: white;
             border-radius: 50%;
             opacity: 0.8;
-            animation: cloud-float 10s infinite linear;
-        }
-
-        .cloud-1 {
-            top: 20%;
-            left: 10%;
-            width: 100px;
-            height: 50px;
-        }
-
-        .cloud-2 {
-            top: 10%;
-            right: 20%;
-            width: 150px;
-            height: 75px;
+            animation: snow-fall linear infinite;
         }
 
         /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -10px); }
+            50% { transform: translate(-50%, 10px); }
+        }
+
         @keyframes smoke-float {
             0% { transform: translateY(0) scale(1); opacity: 0.8; }
             50% { transform: translateY(-20px) scale(1.2); opacity: 0.5; }
@@ -124,17 +147,36 @@
             100% { transform: translateX(200px) rotate(360deg); }
         }
 
-        @keyframes cloud-float {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        @keyframes snow-fall {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
         }
     </style>
 </head>
 <body>
     <div class="sky">
+        <!-- Sun -->
+        <div class="sun"></div>
+
+        <!-- Falling Snow -->
+        <div class="snow">
+            <!-- Generate 50 snowflakes -->
+            <script>
+                for (let i = 0; i < 50; i++) {
+                    const snowflake = document.createElement("div");
+                    snowflake.className = "snowflake";
+                    snowflake.style.left = `${Math.random() * 100}%`;
+                    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                    snowflake.style.animationDelay = `${Math.random() * 5}s`;
+                    document.querySelector(".snow").appendChild(snowflake);
+                }
+            </script>
+        </div>
+
+        <!-- Mountain -->
         <div class="mountain"></div>
-        <div class="cloud cloud-1"></div>
-        <div class="cloud cloud-2"></div>
+
+        <!-- Igloo -->
         <div class="igloo">
             <div class="igloo-dome"></div>
             <div class="igloo-door"></div>
@@ -143,48 +185,38 @@
             <div class="snowball snowball-2"></div>
         </div>
     </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
     <script>
-        // GSAP Animations
-        gsap.from(".igloo-dome", {
-            duration: 2,
-            scale: 0.5,
-            opacity: 0,
-            ease: "power2.out",
-            delay: 1,
-        });
-
-        gsap.from(".igloo-door", {
-            duration: 1.5,
-            y: 100,
-            opacity: 0,
-            ease: "bounce.out",
-            delay: 2,
-        });
-
-        gsap.from(".smoke", {
-            duration: 3,
-            y: -50,
-            opacity: 0,
+        // GSAP Animations for Igloo Movement
+        gsap.to(".igloo", {
+            duration: 10,
+            x: "+=200",
+            y: "+=50",
             repeat: -1,
             yoyo: true,
-            ease: "sine.inOut",
+            ease: "power1.inOut",
         });
 
-        gsap.from(".snowball-1", {
+        // GSAP Animations for Snowballs
+        gsap.to(".snowball-1", {
             duration: 5,
-            x: -200,
-            rotate: -360,
-            repeat: -1,
-            ease: "linear",
-        });
-
-        gsap.from(".snowball-2", {
-            duration: 5,
-            x: 200,
+            x: "+=300",
+            y: "+=100",
             rotate: 360,
             repeat: -1,
-            ease: "linear",
+            yoyo: true,
+            ease: "power1.inOut",
+        });
+
+        gsap.to(".snowball-2", {
+            duration: 5,
+            x: "-=300",
+            y: "+=100",
+            rotate: -360,
+            repeat: -1,
+            yoyo: true,
+            ease: "power1.inOut",
         });
     </script>
 </body>
