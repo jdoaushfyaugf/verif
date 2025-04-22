@@ -3,130 +3,798 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyper-Realistic Igloo Animation</title>
+    <title>NukeBot - Server Clearing Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
     <style>
-        body, html {
+        :root {
+            --primary: #FF3E3E;
+            --secondary: #1E1E1E;
+            --dark: #0F0F0F;
+            --light: #FFFFFF;
+            --accent: #FF7E7E;
+            --glow: #FF0000;
+        }
+        
+        * {
             margin: 0;
             padding: 0;
-            overflow: hidden;
-            height: 100%;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            scroll-behavior: smooth;
         }
-        canvas {
-            display: block;
+        
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .glitch {
+            position: relative;
+            color: var(--light);
+            text-shadow: 0.05em 0 0 var(--glow), 
+                         -0.025em -0.05em 0 rgba(255,0,0,0.75),
+                         0.025em 0.05em 0 rgba(0,255,255,0.75);
+            animation: glitch 500ms infinite;
+        }
+        
+        @keyframes glitch {
+            0% {
+                text-shadow: 0.05em 0 0 var(--glow), 
+                            -0.025em -0.05em 0 rgba(255,0,0,0.75),
+                            0.025em 0.05em 0 rgba(0,255,255,0.75);
+            }
+            15% {
+                text-shadow: -0.05em -0.025em 0 var(--glow), 
+                            0.025em 0.025em 0 rgba(255,0,0,0.75),
+                            -0.05em -0.05em 0 rgba(0,255,255,0.75);
+            }
+            49% {
+                text-shadow: -0.05em -0.025em 0 var(--glow), 
+                            0.025em 0.025em 0 rgba(255,0,0,0.75),
+                            -0.05em -0.05em 0 rgba(0,255,255,0.75);
+            }
+            50% {
+                text-shadow: 0.025em 0.05em 0 var(--glow), 
+                            0.05em 0 0 rgba(255,0,0,0.75),
+                            0 -0.05em 0 rgba(0,255,255,0.75);
+            }
+            99% {
+                text-shadow: 0.025em 0.05em 0 var(--glow), 
+                            0.05em 0 0 rgba(255,0,0,0.75),
+                            0 -0.05em 0 rgba(0,255,255,0.75);
+            }
+            100% {
+                text-shadow: -0.025em 0 0 var(--glow), 
+                            -0.025em -0.025em 0 rgba(255,0,0,0.75),
+                            -0.025em -0.05em 0 rgba(0,255,255,0.75);
+            }
+        }
+        
+        header {
+            background-color: rgba(15, 15, 15, 0.9);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(255, 0, 0, 0.2);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo svg {
+            margin-right: 10px;
+            fill: var(--primary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            transition: color 0.3s, text-shadow 0.3s;
+            position: relative;
+            font-weight: bold;
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--glow);
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+        }
+        
+        .menu-toggle .bar {
+            width: 25px;
+            height: 3px;
+            background-color: var(--light);
+            margin: 5px 0;
+            transition: all 0.3s;
+        }
+        
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(rgba(15, 15, 15, 0.8), rgba(15, 15, 15, 0.9));
+            text-align: center;
+            padding: 0 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--glow);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: var(--light);
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 0 15px var(--glow);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 7px 20px var(--glow);
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        section {
+            padding: 8rem 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+            color: var(--primary);
+            font-size: 3rem;
+            text-transform: uppercase;
+            position: relative;
+            padding-bottom: 20px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+        
+        .feature {
+            background-color: var(--secondary);
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 62, 62, 0.1);
+        }
+        
+        .feature::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 0, 0, 0.05), transparent);
+            z-index: -1;
+        }
+        
+        .feature:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 15px 30px rgba(255, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--glow);
+        }
+        
+        .feature h3 {
+            margin-bottom: 1rem;
+            color: var(--light);
+            font-size: 1.8rem;
+        }
+        
+        .feature p {
+            color: #AAAAAA;
+            font-size: 1.1rem;
+        }
+        
+        .commands {
+            background-color: var(--secondary);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 4rem;
+        }
+        
+        .command-header {
+            background-color: var(--primary);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .command-title {
+            color: var(--light);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .command-dots {
+            display: flex;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 6px;
+        }
+        
+        .dot-red { background-color: #FF5F5F; }
+        .dot-yellow { background-color: #FFD75F; }
+        .dot-green { background-color: #5FFF5F; }
+        
+        .command-body {
+            padding: 1.5rem;
+            font-family: monospace;
+            color: #AAAAAA;
+        }
+        
+        .command-line {
+            display: flex;
+            margin-bottom: 0.8rem;
+        }
+        
+        .command-prompt {
+            color: var(--primary);
+            margin-right: 10px;
+        }
+        
+        .command-text {
+            color: var(--light);
+        }
+        
+        .highlight {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .typing {
+            border-right: 2px solid var(--primary);
+            animation: blink 1s infinite;
+            padding-right: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: var(--primary); }
+        }
+        
+        .instructions {
+            padding: 3rem 0;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .step {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 15px;
+            position: relative;
+            border: 1px solid rgba(255, 62, 62, 0.1);
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            background-color: var(--primary);
+            color: var(--light);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 0 10px var(--glow);
+        }
+        
+        .step h3 {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            color: var(--light);
+        }
+        
+        .step p {
+            color: #AAAAAA;
+        }
+        
+        .cta {
+            text-align: center;
+            background: linear-gradient(rgba(30, 30, 30, 0.8), rgba(15, 15, 15, 0.9));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/1200/800') center/cover no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .cta h2 {
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            color: var(--light);
+        }
+        
+        .cta p {
+            margin-bottom: 2.5rem;
+            color: #AAAAAA;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1.2rem;
+        }
+        
+        footer {
+            background-color: var(--secondary);
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links li {
+            margin: 0 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links a {
+            color: #AAAAAA;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+        
+        .social-links li {
+            margin: 0 1rem;
+        }
+        
+        .social-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .social-icon:hover {
+            background-color: var(--primary);
+            transform: translateY(-5px);
+        }
+        
+        .social-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--light);
+        }
+        
+        .copyright {
+            color: #777777;
+            font-size: 0.9rem;
+        }
+        
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            background: linear-gradient(to bottom, 
+                                       rgba(255,0,0,0.1), 
+                                       transparent 3%, 
+                                       transparent 97%, 
+                                       rgba(255,0,0,0.1));
+        }
+        
+        .glitch-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 1px,
+                rgba(255,255,255,0.03) 1px,
+                rgba(255,255,255,0.03) 2px
+            );
+        }
+        
+        /* Floating animation for elements */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+                z-index: 101;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 80%;
+                height: 100vh;
+                background-color: var(--secondary);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.5s;
+                z-index: 100;
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            .nav-links li {
+                margin: 1.5rem 0;
+            }
+            
+            .menu-toggle.active .bar:nth-child(1) {
+                transform: rotate(-45deg) translate(-5px, 6px);
+            }
+            
+            .menu-toggle.active .bar:nth-child(2) {
+                opacity: 0;
+            }
+            
+            .menu-toggle.active .bar:nth-child(3) {
+                transform: rotate(45deg) translate(-5px, -6px);
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2.2rem;
+            }
+            
+            .feature-icon {
+                font-size: 3rem;
+            }
+            
+            .step {
+                margin-bottom: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r146/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script>
-        // Scene Setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(renderer.domElement);
-
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(10, 10, 10);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 50;
-        scene.add(directionalLight);
-
-        // Skybox
-        const skyTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/skybox/arid2.jpg');
-        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
-        const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide });
-        const skybox = new THREE.Mesh(skyGeometry, skyMaterial);
-        scene.add(skybox);
-
-        // Ground (Snow)
-        const groundTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/snow.jpg');
-        groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-        groundTexture.repeat.set(10, 10);
-        const groundMaterial = new THREE.MeshStandardMaterial({ map: groundTexture });
-        const groundGeometry = new THREE.PlaneGeometry(100, 100);
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        // Igloo (3D Model)
-        const loader = new THREE.GLTFLoader();
-        loader.load('https://threejs.org/examples/models/gltf/Igloo/scene.gltf', (gltf) => {
-            const igloo = gltf.scene;
-            igloo.scale.set(0.5, 0.5, 0.5);
-            igloo.position.y = 1;
-            igloo.castShadow = true;
-            igloo.receiveShadow = true;
-            scene.add(igloo);
-
-            // Animation
-            const animateIgloo = () => {
-                igloo.rotation.y += 0.01;
-                requestAnimationFrame(animateIgloo);
-            };
-            animateIgloo();
-        });
-
-        // Snowfall
-        const snowflakes = [];
-        const snowGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-        const snowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        for (let i = 0; i < 1000; i++) {
-            const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
-            snowflake.position.set(
-                Math.random() * 100 - 50,
-                Math.random() * 50 + 50,
-                Math.random() * 100 - 50
-            );
-            snowflake.castShadow = true;
-            snowflakes.push(snowflake);
-            scene.add(snowflake);
-        }
-
-        // Camera Position
-        camera.position.set(0, 10, 20);
-        camera.lookAt(0, 0, 0);
-
-        // Controls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-
-        // Render Loop
-        const animate = () => {
-            requestAnimationFrame(animate);
-
-            // Snowfall Animation
-            snowflakes.forEach((snowflake) => {
-                snowflake.position.y -= 0.1;
-                if (snowflake.position.y < -10) {
-                    snowflake.position.y = 50;
-                }
-            });
-
-            controls.update();
-            renderer.render(scene, camera);
-        };
-        animate();
-
-        // Resize Handling
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-</body>
-</html>
+    <div class="glitch-overlay" id="glitch-overlay"></div>
+    <div id="particles-js"></div>
+    
+    <header>
+        <nav>
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10Z" />
+                </svg>
+                Nuke<span class="glitch">Bot</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#commands">Commands</a></li>
+                <li><a href="#setup">Setup</a></li>
+            </ul>
+            <div class="menu-toggle" id="mobile-menu">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="hero">
+        <div id="canvas-container"></div>
+        <div class="hero-content">
+            <h1>Server Destruction <span class="glitch">Unleashed</span></h1>
+            <p>The ultimate free Discord bot for complete server clearing operations. Fast, powerful, and reliable.</p>
+            <a href="#download" class="btn" id="cta-button">Download Now</a>
+        </div>
+    </div>
+    
+    <section id="features">
+        <div class="container">
+            <h2 class="section-title">Devastating Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🧨</div>
+                    <h3>Mass Channel Removal</h3>
+                    <p>Clear all channels in seconds with a single command. Fully configurable for selective or complete removal.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">👑</div>
+                    <h3>Channel Creation.</h3>
+                    <p>Spam creates channels.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔥</div>
+                    <h3>Spam messages.</h3>
+                    <p>Spams messages in the newly created channels.</p>
+                </div>
+                <div class="feature floating">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Optimized performance ensures operations complete in seconds, even on the largest servers.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Permission Security (NONE)</h3>
+                    <p>Just say !start, you dont need permission.</p>
+                </div>
+                <div class="feature floating">
+                    <div class="feature-icon">💯</div>
+                    <h3>100% Free</h3>
+                    <p>All features available completely free. No premium tiers, no hidden costs, no limits.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="commands">
+        <div class="container">
+            <h2 class="section-title">Powerful Commands</h2>
+            <div class="commands">
+                <div class="command-header">
+                    <div class="command-title">Command Terminal</div>
+                    <div class="command-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                </div>
+                <div class="command-body">
+                    <div class="command-line">
+                        <span class="command-prompt">$</span>
+                        <span class="command-text">help</span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-text">NukeBot Commands:</span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-prompt">$</span>
+                        <span class="command-text"><span class="highlight">!start</span> --confirm</span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-text">Initiating server wipe...</span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-text">Removing channels... <span class="highlight">DONE</span></span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-text">Just wait. <span class="highlight">DONE</span></span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-text">Almsot done... <span class="highlight">DONE</span></span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-text">Server successfully wiped in <span class="highlight">3.42</span> seconds</span>
+                    </div>
+                    <div class="command-line">
+                        <span class="command-prompt">$</span>
+                        <span class="command-text typing"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    
+    <footer>
+        <div class="footer-content">
+            <ul class="footer-links">
+                <li><a href="#">Privacy Policy</a>
